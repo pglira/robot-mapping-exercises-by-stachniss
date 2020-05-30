@@ -46,15 +46,49 @@ function normalize_angle(angle)
     return angle
 end
 
-function plot_state!(anim, x, lm, sen, timestamp)
+function get_ellipse_parameters_from_covariance_matrix(C)
+# From "Ausgleichsrechnung II", p.54: "Helmert'sche Fehlerellipse"
+
+    sxx = C[1,1]
+    syy = C[2,2]
+    sxy = C[1,2]
+
+    w = sqrt((sxx^2-syy^2)^2+4*sxy^2)
+    a = real(sqrt(Complex(1/2*(sxx^2+syy^2+w))))
+    b = real(sqrt(Complex(1/2*(sxx^2+syy^2-w))))
+    alpha = 1/2*atan(2*sxy/(sxx^2-sxy^2))
+
+    return a, b, alpha
+end
+
+function get_ellipse_points(x0, y0, a, b, alpha; scale=1)
+
+    no_pts = 100;
+
+    beta = collect(0:2*pi/no_pts:2*pi)
+    x = a*cos.(beta)*scale
+    y = a*sin.(beta)*scale
+
+    # Rotate
+    x = cos.(alpha)*x - sin.(alpha)*y
+    y = sin.(alpha)*x + cos.(alpha)*y
+
+    # Translate
+    x = x .+ x0
+    y = y .+ y0
+
+    return x, y
+end
+
+function plot_state!(anim, x, Sig_x, lm, sen, timestamp, x_lims, y_lims)
 
     gr()
 
-    x_margin = 5
-    y_margin = 5
-
     # Landmarks
-    scatter((lm.x, lm.y), markershape=:star, markersize=5, markercolor=:yellow, label="landmarks")
+    scatter((lm.x, lm.y), markershape=:star, markersize=5, markercolor=:yellow, label="landmarks", 
+            aspect_ratio=:equal)
+
+    # Todo: Landmarks error ellipses
 
     # Real sensor observations to landmarks
     for i = 1:nrow(sen)
@@ -74,11 +108,22 @@ function plot_state!(anim, x, lm, sen, timestamp)
     end
 
     # Robot pose
-    scatter!((x[1], x[2]), markersize=5, markercolor=:red, label="robot")
+    scatter!((x[1], x[2]), markersize=4, markercolor=:green, label="robot")
+
+    # Robot error ellipse
+    if ~isempty(Sig_x)
+        a, b, alpha = get_ellipse_parameters_from_covariance_matrix(Sig_x)
+        x_ell, y_ell = get_ellipse_points(x[1], x[2], a, b, alpha)
+        plot!((x_ell, y_ell), color=:red, label="")
+    end
+
+    # Robot orientation
+    ori = [cos(x[3]) sin(x[3])]./norm([cos(x[3]) sin(x[3])]) # normalize length
+    quiver!([x[1]], [x[2]], quiver=([ori[1]], [ori[2]]), color=:green)
 
     title!("Robot pose, landmarks and sensor observations (t=$timestamp)")
-    xlims!((minimum(lm.x)-x_margin,maximum(lm.x)+x_margin))
-    ylims!((minimum(lm.y)-y_margin,maximum(lm.y)+y_margin))
+    xlims!(x_lims)
+    ylims!(y_lims)
     frame(anim)
 
 end
