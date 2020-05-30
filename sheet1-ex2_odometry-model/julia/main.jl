@@ -38,7 +38,8 @@ function main()
 
         x = motion_command(x, odo[odo.timestamp .== timestamp, :])
 
-        plot_state!(anim, x, lm, sen[sen.timestamp .== timestamp, :], timestamp)
+        plot_state!(anim, x, [], lm, sen[sen.timestamp .== timestamp, :], timestamp,
+                    (-5, 15), (-2.5, 12.5))
 
         println("Robot pose at time=$timestamp: $x")
 
