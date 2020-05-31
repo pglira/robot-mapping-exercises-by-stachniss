@@ -58,7 +58,21 @@ function get_ellipse_parameters_from_covariance_matrix(C)
     w = sqrt((sxx-syy)^2+4*sxy^2)
     a = real(sqrt(Complex(1/2*(sxx+syy+w))))
     b = real(sqrt(Complex(1/2*(sxx+syy-w))))
-    alpha = 1/2*atan(2*sxy/(sxx-syy))
+
+    if sxx != syy
+        alpha = 1/2*atan(2*sxy/(sxx-syy))
+    elseif sxy == 0
+        alpha = 0
+    elseif sxy > 0
+        angle = pi/4
+    elseif sxy < 0
+        angle = -pi/4
+    end
+
+    # Look where the greater half axis belongs to
+    if sxx < syy
+        a, b = b, a
+    end
 
     return a, b, alpha
 end
@@ -70,7 +84,7 @@ function get_ellipse_points(x0, y0, a, b, alpha; scale=1)
     beta = collect(0:2*pi/no_pts:2*pi)
     beta = [beta; 2*pi]
     x = a*cos.(beta)*scale
-    y = a*sin.(beta)*scale
+    y = b*sin.(beta)*scale
 
     # Rotate
     x = cos.(alpha)*x - sin.(alpha)*y
