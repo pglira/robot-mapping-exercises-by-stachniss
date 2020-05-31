@@ -11,6 +11,10 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ![odometry_model](sheet1-ex2_odometry-model/julia/state.gif)
 
+## Exercise "EFK SLAM" (sheet 4, exercise 1)
+
+![odometry_model](sheet4-ex1_ekf-slam/julia/state.gif)
+
 ## Related
 
 - [Solutions in Octave](https://github.com/kiran-mohan/SLAM-Algorithms-Octave)
