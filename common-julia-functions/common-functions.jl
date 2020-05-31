@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 function read_landmarks(path_to_file)
 
     lm = DataFrame(CSV.File("world.dat", header=false, types=[Int, Float64, Float64]))
@@ -80,7 +82,7 @@ function get_ellipse_points(x0, y0, a, b, alpha; scale=1)
     return x, y
 end
 
-function plot_state!(anim, x, Sig_x, lm, sen, timestamp, x_lims, y_lims)
+function plot_state!(anim, x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, y_lims)
 
     gr()
 
@@ -88,15 +90,22 @@ function plot_state!(anim, x, Sig_x, lm, sen, timestamp, x_lims, y_lims)
     scatter((lm.x, lm.y), markershape=:star, markersize=5, markercolor=:yellow, label="landmarks", 
             aspect_ratio=:equal)
 
-    # Todo: Landmarks error ellipses
+    # Landmarks error ellipses
+    if ~isempty(C_lm)
+        for i = 1:length(C_lm)
+            a, b, alpha = get_ellipse_parameters_from_covariance_matrix(C_lm[i])
+            x_ell, y_ell = get_ellipse_points(lm.x[i], lm.y[i], a, b, alpha)
+            plot!((x_ell, y_ell), color=:red, label="")
+        end
+    end
 
     # Real sensor observations to landmarks
     for i = 1:nrow(sen)
         range = sen[i, :range]
         bearing = sen[i, :bearing]
-        dx = range*cos(x[3]+bearing)
-        dy = range*sin(x[3]+bearing)
-        plot!([x[1]; x[1]+dx], [x[2]; x[2]+dy], color=:gray, label="")
+        dx = range*cos(x0[3]+bearing)
+        dy = range*sin(x0[3]+bearing)
+        plot!([x0[1]; x0[1]+dx], [x0[2]; x0[2]+dy], color=:gray, label="")
     end
 
     # Fake sensor observations to landmarks given the robot pose
@@ -104,22 +113,27 @@ function plot_state!(anim, x, Sig_x, lm, sen, timestamp, x_lims, y_lims)
         lm_id = sen[i,:id]
         lm_x = lm[lm_id,:x]
         lm_y = lm[lm_id,:y]
-        plot!([x[1]; lm_x], [x[2]; lm_y], color=:black, label="")
+        plot!([x0[1]; lm_x], [x0[2]; lm_y], color=:black, label="")
+    end
+
+    # Full path of robot pose
+    if ~isempty(x0_path)
+        plot!(x0_path[:,1], x0_path[:,2], color=:gray, label="path")
     end
 
     # Robot pose
-    scatter!((x[1], x[2]), markersize=4, markercolor=:green, label="robot")
+    scatter!((x0[1], x0[2]), markersize=4, markercolor=:green, label="robot")
 
     # Robot error ellipse
-    if ~isempty(Sig_x)
-        a, b, alpha = get_ellipse_parameters_from_covariance_matrix(Sig_x)
-        x_ell, y_ell = get_ellipse_points(x[1], x[2], a, b, alpha)
+    if ~isempty(C_x0)
+        a, b, alpha = get_ellipse_parameters_from_covariance_matrix(C_x0)
+        x_ell, y_ell = get_ellipse_points(x0[1], x0[2], a, b, alpha)
         plot!((x_ell, y_ell), color=:red, label="")
     end
 
     # Robot orientation
-    ori = [cos(x[3]) sin(x[3])]./norm([cos(x[3]) sin(x[3])]) # normalize length
-    quiver!([x[1]], [x[2]], quiver=([ori[1]], [ori[2]]), color=:green)
+    ori = [cos(x0[3]) sin(x0[3])]./norm([cos(x0[3]) sin(x0[3])]) # normalize length
+    quiver!([x0[1]], [x0[2]], quiver=([ori[1]], [ori[2]]), color=:green)
 
     title!("Robot pose, landmarks and sensor observations (t=$timestamp)")
     xlims!(x_lims)

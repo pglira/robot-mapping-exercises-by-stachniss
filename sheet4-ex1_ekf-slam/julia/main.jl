@@ -135,6 +135,14 @@ function update_lm_positions_from_state_vector(lm, x)
     return lm
 end
 
+function get_C_lm(lm, Sig_x)
+    C_lm = []
+    for i = 1:nrow(lm)
+        push!(C_lm, Sig_x[2*i+2:2*i+3,2*i+2:2*i+3])
+    end
+    return C_lm
+end
+
 function main()
 # Todo Short explanation
 
@@ -158,7 +166,9 @@ function main()
 
     anim = Animation()
 
-    for timestamp in odo.timestamp
+    x0_path = Array{Float64}(undef,0,2)
+
+    for (i, timestamp) in enumerate(odo.timestamp)
 
         x, Sig_x = prediction_step(x, Sig_x, odo[odo.timestamp .== timestamp, :])
 
@@ -166,10 +176,16 @@ function main()
 
         lm = update_lm_positions_from_state_vector(lm, x)
 
-        plot_state!(anim, x, Sig_x[1:2, 1:2], lm, sen[sen.timestamp .== timestamp, :], timestamp,
-                    (-5, 15), (-2.5, 12.5))
+        x0_path = [x0_path; x[1:2]']
+
+        plot_state!(anim, x[1:3], Sig_x[1:3, 1:3], x0_path, lm, get_C_lm(lm, Sig_x),
+                    sen[sen.timestamp .== timestamp, :], timestamp, (-5, 15), (-2.5, 12.5))
 
         println("Robot pose at time=$timestamp: $(x[1:3])")
+
+        #= if timestamp == 20 =#
+        #=     break =#
+        #= end =#
 
     end
 

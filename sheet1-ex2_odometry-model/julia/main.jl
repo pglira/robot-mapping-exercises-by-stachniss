@@ -34,11 +34,15 @@ function main()
 
     anim = Animation()
 
+    x0_path = Array{Float64}(undef,0,2)
+
     for timestamp in odo.timestamp
 
         x = motion_command(x, odo[odo.timestamp .== timestamp, :])
 
-        plot_state!(anim, x, [], lm, sen[sen.timestamp .== timestamp, :], timestamp,
+        x0_path = [x0_path; x[1:2]']
+
+        plot_state!(anim, x[1:3], [], x0_path, lm, [], sen[sen.timestamp .== timestamp, :], timestamp,
                     (-5, 15), (-2.5, 12.5))
 
         println("Robot pose at time=$timestamp: $x")
