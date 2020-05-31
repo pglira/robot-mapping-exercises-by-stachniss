@@ -17,4 +17,4 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ## Related
 
-- [Solutions in Octave](https://github.com/kiran-mohan/SLAM-Algorithms-Octave)
+- [Repo containing solutions written in Octave](https://github.com/kiran-mohan/SLAM-Algorithms-Octave)

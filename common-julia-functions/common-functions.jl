@@ -118,11 +118,11 @@ function plot_state!(anim, x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, 
 
     # Full path of robot pose
     if ~isempty(x0_path)
-        plot!(x0_path[:,1], x0_path[:,2], color=:gray, label="path")
+        plot!(x0_path[:,1], x0_path[:,2], color=:gray, label="robot path")
     end
 
     # Robot pose
-    scatter!((x0[1], x0[2]), markersize=4, markercolor=:green, label="robot")
+    scatter!((x0[1], x0[2]), markersize=4, markercolor=:green, label="robot pose")
 
     # Robot error ellipse
     if ~isempty(C_x0)
@@ -135,7 +135,7 @@ function plot_state!(anim, x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, 
     ori = [cos(x0[3]) sin(x0[3])]./norm([cos(x0[3]) sin(x0[3])]) # normalize length
     quiver!([x0[1]], [x0[2]], quiver=([ori[1]], [ori[2]]), color=:green)
 
-    title!("Robot pose, landmarks and sensor observations (t=$timestamp)")
+    title!("Robot, landmarks and sensor observations (t=$timestamp)")
     xlims!(x_lims)
     ylims!(y_lims)
     frame(anim)
