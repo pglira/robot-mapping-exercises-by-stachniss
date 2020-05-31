@@ -183,10 +183,6 @@ function main()
 
         println("Robot pose at time=$timestamp: $(x[1:3])")
 
-        #= if timestamp == 20 =#
-        #=     break =#
-        #= end =#
-
     end
 
     gif(anim, "state.gif", fps=15)

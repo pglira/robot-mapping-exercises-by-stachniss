@@ -9,11 +9,15 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ## Exercise "odometry model" (sheet 1, exercise 2)
 
-![odometry_model](sheet1-ex2_odometry-model/julia/state.gif)
+![](sheet1-ex2_odometry-model/julia/state.gif)
 
 ## Exercise "EFK SLAM" (sheet 4, exercise 1)
 
-![odometry_model](sheet4-ex1_ekf-slam/julia/state.gif)
+![](sheet4-ex1_ekf-slam/julia/state.gif)
+
+## Exercise "Unscented transform" (sheet 5, exercise 1)
+
+![](sheet5-ex1_unscented-transform/julia/unscented_transform.png)
 
 ## Related
 
