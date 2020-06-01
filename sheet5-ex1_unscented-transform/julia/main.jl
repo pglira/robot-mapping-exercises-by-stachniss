@@ -13,9 +13,9 @@ function compute_sigma_points(mu, sigma, lambda, alpha, beta)
     sigma_points = mu # first point is mean
     square_root_of_matrix = sqrt((n+lambda)*sigma)
     for i = 1:n
-        new_sigma_point_1 = mu + square_root_of_matrix[:,i];
-        new_sigma_point_2 = mu - square_root_of_matrix[:,i];
-        sigma_points = [sigma_points new_sigma_point_1 new_sigma_point_2];
+        new_sigma_point_1 = mu + square_root_of_matrix[:,i]
+        new_sigma_point_2 = mu - square_root_of_matrix[:,i]
+        sigma_points = [sigma_points new_sigma_point_1 new_sigma_point_2]
     end
 
     # Compute weight vectors w_m and w_c, see slide 17
