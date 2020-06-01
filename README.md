@@ -24,3 +24,4 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 - Repositories containing solutions written in Octave:
     - https://github.com/kiran-mohan/SLAM-Algorithms-Octave
     - https://github.com/salihmarangoz/RobotMappingCourse
+    - https://github.com/aimas-upb/slam-course-solutions
