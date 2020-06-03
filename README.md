@@ -19,6 +19,10 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ![](sheet5-ex1_unscented-transform/julia/unscented_transform.png)
 
+## Exercise "Unscented SLAM" (sheet 6, exercise 1)
+
+![](sheet6-ex1_unscented-slam/julia/state.gif)
+
 ## Related
 
 - Repositories containing solutions written in Octave:
