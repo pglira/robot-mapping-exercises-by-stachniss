@@ -108,9 +108,11 @@ function plot_state!(x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, y_lims
     # Landmarks error ellipses
     if ~isempty(C_lm)
         for i = 1:length(C_lm)
-            a, b, alpha = get_ellipse_parameters_from_covariance_matrix(C_lm[i])
-            x_ell, y_ell = get_ellipse_points(lm.x[i], lm.y[i], a, b, alpha)
-            plot!((x_ell, y_ell), color=:red, label="")
+            if ~isempty(C_lm[i])
+                a, b, alpha = get_ellipse_parameters_from_covariance_matrix(C_lm[i])
+                x_ell, y_ell = get_ellipse_points(lm.x[i], lm.y[i], a, b, alpha)
+                plot!((x_ell, y_ell), color=:red, label="")
+            end
         end
     end
 
