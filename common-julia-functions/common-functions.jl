@@ -97,7 +97,7 @@ function get_ellipse_points(x0, y0, a, b, alpha; scale=1)
     return x, y
 end
 
-function plot_state!(anim, x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, y_lims)
+function plot_state!(x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, y_lims)
 
     gr()
 
@@ -153,6 +153,5 @@ function plot_state!(anim, x0, C_x0, x0_path, lm, C_lm, sen, timestamp, x_lims, 
     title!("Robot, landmarks and sensor observations (t=$timestamp)")
     xlims!(x_lims)
     ylims!(y_lims)
-    frame(anim)
 
 end

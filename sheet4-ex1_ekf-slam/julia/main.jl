@@ -178,8 +178,10 @@ function main()
 
         x0_path = [x0_path; x[1:2]']
 
-        plot_state!(anim, x[1:3], Sig_x[1:3, 1:3], x0_path, lm, get_C_lm(lm, Sig_x),
+        plot_state!(x[1:3], Sig_x[1:3, 1:3], x0_path, lm, get_C_lm(lm, Sig_x),
                     sen[sen.timestamp .== timestamp, :], timestamp, (-5, 15), (-2.5, 12.5))
+
+        frame(anim)
 
         println("Robot pose at time=$timestamp: $(x[1:3])")
 
