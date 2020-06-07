@@ -3,7 +3,7 @@ This repository contains the solutions of some exercises from the lecture [Robot
 - Lecturer: Cyrill Stachniss
 - Tutors: Rainer Kuemmerle and Fabrizio Nenci
 
-I've rewritten all examples in the [Julia](https://julialang.org) language.
+I've rewritten all examples in the [Julia](https://julialang.org) language. The EKF SLAM algorithm also in C++.
 
 Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?list=PLgnQpQtFTOGQrZ4O5QzbIHgl3b1JHimN_).
 
