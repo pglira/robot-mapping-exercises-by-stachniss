@@ -58,7 +58,7 @@ SensorData LineToSensorData(const std::vector<std::string> &line,
                             const int &time);
 
 std::vector<Landmark> InitializeLandmarkCollection(
-    const std::vector<SensorData> &sen);
+    const std::vector<SensorData> &sen_collection);
 
 VectorXdual Initializex(const size_t &no_prm);
 

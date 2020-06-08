@@ -4,9 +4,9 @@ int main() {
   const std::string kPathToSensorData{"sensor_data.dat"};
 
   auto data{ReadDataFromFile(kPathToSensorData)};
-  auto [odo, sen]{ExtractOdometryAndSensorData(data)};
+  auto [odo_collection, sen_collection]{ExtractOdometryAndSensorData(data)};
 
-  std::vector<Landmark> lm_collection{InitializeLandmarkCollection(sen)};
+  std::vector<Landmark> lm_collection{InitializeLandmarkCollection(sen_collection)};
   std::vector<Pose> pose_collection{};
 
   size_t no_prm{3 + lm_collection.size() * 2};  // x0, y0, theta0, x_lm1, y_lm1, x_lm2, y_lm2, ...
@@ -16,13 +16,11 @@ int main() {
   AddPoseToCollection(x, 0, pose_collection);
   ReportRobotPose(x.head(3), 0);
 
-  for (int i = 0; i < odo.size(); i++) {
-    PredictionStep(odo[i], x, Cx);
-
-    CorrectionStep(GetCurrentSensorData(sen, odo[i].time), lm_collection, x, Cx);
-
-    AddPoseToCollection(x, odo[i].time, pose_collection);
-    ReportRobotPose(x.head(3), odo[i].time);
+  for (auto &odo : odo_collection) {
+    PredictionStep(odo, x, Cx);
+    CorrectionStep(GetCurrentSensorData(sen_collection, odo.time), lm_collection, x, Cx);
+    AddPoseToCollection(x, odo.time, pose_collection);
+    ReportRobotPose(x.head(3), odo.time);
   }
 
   return 0;
@@ -56,12 +54,12 @@ std::tuple<std::vector<OdometryData>, std::vector<SensorData>> ExtractOdometryAn
   std::vector<OdometryData> odo{};
   std::vector<SensorData> sen{};
   int obs_time{0};
-  for (int i = 0; i < data.size(); i++) {
-    if (data[i][0].compare("ODOMETRY") == 0) {
+  for (const auto &line : data) {
+    if (line[0] == "ODOMETRY") {
       obs_time = obs_time + 1;
-      odo.push_back(LineToOdometryData(data[i], obs_time));
+      odo.push_back(LineToOdometryData(line, obs_time));
     } else {
-      sen.push_back(LineToSensorData(data[i], obs_time));
+      sen.push_back(LineToSensorData(line, obs_time));
     }
   }
   return {odo, sen};
@@ -76,9 +74,7 @@ OdometryData LineToOdometryData(const std::vector<std::string> &line, const int 
   return odo;
 }
 
-SensorData LineToSensorData(const std::vector<std::string> &line,
-
-                            const int &time) {
+SensorData LineToSensorData(const std::vector<std::string> &line, const int &time) {
   SensorData sen{};
   sen.time = time;
   sen.id = std::stoi(line[1]);
@@ -87,19 +83,19 @@ SensorData LineToSensorData(const std::vector<std::string> &line,
   return sen;
 }
 
-std::vector<Landmark> InitializeLandmarkCollection(const std::vector<SensorData> &sen) {
+std::vector<Landmark> InitializeLandmarkCollection(const std::vector<SensorData> &sen_collection) {
   // Get max id
   int max_id{0};
-  for (int i = 0; i < sen.size(); i++) {
-    if (sen[i].id > max_id) {
-      max_id = sen[i].id;
+  for (const auto &sen : sen_collection) {
+    if (sen.id > max_id) {
+      max_id = sen.id;
     }
   }
 
   // Create collection with landmarks with ids from 1 to max_id
   std::vector<Landmark> lm_collection{};
   for (int i = 1; i <= max_id; i++) {
-    lm_collection.push_back(Landmark());
+    lm_collection.emplace_back();
     lm_collection.back().id = i;
     lm_collection.back().idx_prm_x = 2 * i + 1;
     lm_collection.back().idx_prm_y = 2 * i + 2;
@@ -201,9 +197,9 @@ void CorrectionStep(const std::vector<SensorData> &sen_this_step,
 std::vector<SensorData> GetCurrentSensorData(const std::vector<SensorData> &sen_collection,
                                              const int &time) {
   std::vector<SensorData> sen_current{};
-  for (int i = 0; i < sen_collection.size(); i++) {
-    if (sen_collection[i].time == time) {
-      sen_current.push_back(sen_collection[i]);
+  for (const auto &sen : sen_collection) {
+    if (sen.time == time) {
+      sen_current.push_back(sen);
     }
   }
   return sen_current;
@@ -227,10 +223,11 @@ void AddFirstEstimateOfLandmarkTox(const SensorData &sen,
   lm_collection[sen.id - 1].initialized = true;
 }
 
-std::tuple<int, int> GetIdxPrmOfLandmark(const SensorData &sen, const std::vector<Landmark> &lm) {
-  for (int i = 0; i < lm.size(); i++) {
-    if (lm[i].id == sen.id) {
-      return {lm[i].idx_prm_x, lm[i].idx_prm_y};
+std::tuple<int, int> GetIdxPrmOfLandmark(const SensorData &sen,
+                                         const std::vector<Landmark> &lm_collection) {
+  for (const auto &lm : lm_collection) {
+    if (lm.id == sen.id) {
+      return {lm.idx_prm_x, lm.idx_prm_y};
     }
   }
 }
