@@ -9,9 +9,6 @@
 #include <iostream>
 #include <vector>
 
-using namespace autodiff;
-using namespace Eigen;
-
 struct Pose {
   int time;
   double x0;
@@ -37,7 +34,7 @@ struct Landmark {
   int id;
   double x;
   double y;
-  Matrix3d C;
+  Eigen::Matrix3d C;
   int idx_prm_x;
   int idx_prm_y;
   bool initialized{false};
@@ -45,61 +42,55 @@ struct Landmark {
 
 int main();
 
-std::vector<std::vector<std::string>> ReadDataFromFile(
-    const std::string &path_to_data);
+std::vector<std::vector<std::string>> ReadDataFromFile(const std::string &path_to_data);
 
-std::tuple<std::vector<OdometryData>, std::vector<SensorData>>
-ExtractOdometryAndSensorData(const std::vector<std::vector<std::string>> &data);
+std::tuple<std::vector<OdometryData>, std::vector<SensorData>> ExtractOdometryAndSensorData(
+    const std::vector<std::vector<std::string>> &data);
 
-OdometryData LineToOdometryData(const std::vector<std::string> &line,
-                                const int &time);
+OdometryData LineToOdometryData(const std::vector<std::string> &line, const int &time);
 
-SensorData LineToSensorData(const std::vector<std::string> &line,
-                            const int &time);
+SensorData LineToSensorData(const std::vector<std::string> &line, const int &time);
 
-std::vector<Landmark> InitializeLandmarkCollection(
-    const std::vector<SensorData> &sen_collection);
+std::vector<Landmark> InitializeLandmarkCollection(const std::vector<SensorData> &sen_collection);
 
-VectorXdual Initializex(const size_t &no_prm);
+autodiff::VectorXdual Initializex(const size_t &no_prm);
 
-MatrixXd InitializeCx(const size_t &no_prm);
+Eigen::MatrixXd InitializeCx(const size_t &no_prm);
 
-void AddPoseToCollection(const VectorXdual &x,
+void AddPoseToCollection(const autodiff::VectorXdual &x,
                          const int &time,
                          std::vector<Pose> pose_collection);
 
-void PredictionStep(const OdometryData &odo, VectorXdual &x, MatrixXd &Cx);
+void PredictionStep(const OdometryData &odo, autodiff::VectorXdual &x, Eigen::MatrixXd &Cx);
 
-MatrixXd GetR(const long &no_prm);
+Eigen::MatrixXd GetR(const long &no_prm);
 
-VectorXdual g(const VectorXdual &x, const OdometryData &odo);
+autodiff::VectorXdual g(const autodiff::VectorXdual &x, const OdometryData &odo);
 
 void CorrectionStep(const std::vector<SensorData> &sen_this_step,
                     std::vector<Landmark> &lm_collection,
-                    VectorXdual &x,
-                    MatrixXd &Cx);
+                    autodiff::VectorXdual &x,
+                    Eigen::MatrixXd &Cx);
 
-std::vector<SensorData> GetCurrentSensorData(
-    const std::vector<SensorData> &sen_collection, const int &time);
+std::vector<SensorData> GetCurrentSensorData(const std::vector<SensorData> &sen_collection,
+                                             const int &time);
 
-bool NewLandmark(const SensorData &sen,
-                 const std::vector<Landmark> &lm_collection);
+bool NewLandmark(const SensorData &sen, const std::vector<Landmark> &lm_collection);
 
 void AddFirstEstimateOfLandmarkTox(const SensorData &sen,
                                    std::vector<Landmark> &lm_collection,
-                                   VectorXdual &x);
+                                   autodiff::VectorXdual &x);
 
-std::tuple<int, int> GetIdxPrmOfLandmark(const SensorData &sen,
-                                         const std::vector<Landmark> &lm);
+std::tuple<int, int> GetIdxPrmOfLandmark(const SensorData &sen, const std::vector<Landmark> &lm);
 
-VectorXdual h(const VectorXdual &x, const int &idx_prm_x, const int &idx_prm_y);
+autodiff::VectorXdual h(const autodiff::VectorXdual &x, const int &idx_prm_x, const int &idx_prm_y);
 
-MatrixXd GetQ(const unsigned long &no_obs);
+Eigen::MatrixXd GetQ(const unsigned long &no_obs);
 
-void ReportRobotPose(const VectorXdual &x, const int &time);
+void ReportRobotPose(const autodiff::VectorXdual &x, const int &time);
 
-dual NormalizeAngle(dual angle);
+autodiff::dual NormalizeAngle(autodiff::dual angle);
 
-VectorXdual ResetDualVector(VectorXdual x);
+autodiff::VectorXdual ResetDualVector(autodiff::VectorXdual x);
 
 #endif  // EKF_SLAM_MAIN_H

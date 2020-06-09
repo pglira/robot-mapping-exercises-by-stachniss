@@ -104,18 +104,20 @@ std::vector<Landmark> InitializeLandmarkCollection(const std::vector<SensorData>
   return lm_collection;
 }
 
-VectorXdual Initializex(const size_t &no_prm) { return VectorXdual(no_prm); }
+autodiff::VectorXdual Initializex(const size_t &no_prm) { return autodiff::VectorXdual(no_prm); }
 
-MatrixXd InitializeCx(const size_t &no_prm) {
+Eigen::MatrixXd InitializeCx(const size_t &no_prm) {
   const double kInitialLandmarkVariance = 1000;
-  MatrixXd Cx{MatrixXd::Zero(no_prm, no_prm)};
+  Eigen::MatrixXd Cx{Eigen::MatrixXd::Zero(no_prm, no_prm)};
   for (int i = 3; i < no_prm; i++) {
     Cx(i, i) = kInitialLandmarkVariance;
   }
   return Cx;
 }
 
-void AddPoseToCollection(const VectorXdual &x, const int &time, std::vector<Pose> pose_collection) {
+void AddPoseToCollection(const autodiff::VectorXdual &x,
+                         const int &time,
+                         std::vector<Pose> pose_collection) {
   Pose pose{};
   pose.time = time;
   pose.x0 = x[0].val;
@@ -124,27 +126,27 @@ void AddPoseToCollection(const VectorXdual &x, const int &time, std::vector<Pose
   pose_collection.push_back(pose);
 }
 
-void PredictionStep(const OdometryData &odo, VectorXdual &x, MatrixXd &Cx) {
-  MatrixXd R{GetR(x.size())};
+void PredictionStep(const OdometryData &odo, autodiff::VectorXdual &x, Eigen::MatrixXd &Cx) {
+  Eigen::MatrixXd R{GetR(x.size())};
 
   x = g(x, odo);
   x = ResetDualVector(x);
-  MatrixXd G = jacobian(g, wrt(x), at(x, odo));
+  Eigen::MatrixXd G = jacobian(g, wrt(x), at(x, odo));
 
   Cx = G * Cx * G.transpose() + R;
 }
 
-MatrixXd GetR(const long &no_prm) {
+Eigen::MatrixXd GetR(const long &no_prm) {
   const double kMotionNoise{0.1};
-  MatrixXd R{MatrixXd::Zero(no_prm, no_prm)};
+  Eigen::MatrixXd R{Eigen::MatrixXd::Zero(no_prm, no_prm)};
   R(0, 0) = kMotionNoise;
   R(1, 1) = kMotionNoise;
   R(2, 2) = kMotionNoise / 10;
   return R;
 }
 
-VectorXdual g(const VectorXdual &x, const OdometryData &odo) {
-  VectorXdual fx(x.rows());
+autodiff::VectorXdual g(const autodiff::VectorXdual &x, const OdometryData &odo) {
+  autodiff::VectorXdual fx(x.rows());
 
   fx[0] = x[0] + odo.trans * cos(x[2] + odo.rot1);
   fx[1] = x[1] + odo.trans * sin(x[2] + odo.rot1);
@@ -159,13 +161,13 @@ VectorXdual g(const VectorXdual &x, const OdometryData &odo) {
 
 void CorrectionStep(const std::vector<SensorData> &sen_this_step,
                     std::vector<Landmark> &lm_collection,
-                    VectorXdual &x,
-                    MatrixXd &Cx) {
+                    autodiff::VectorXdual &x,
+                    Eigen::MatrixXd &Cx) {
   auto no_prm{x.size()};
   auto no_obs{sen_this_step.size() * 2};
 
-  MatrixXd H(no_obs, no_prm);
-  VectorXdual dz(no_obs);
+  Eigen::MatrixXd H(no_obs, no_prm);
+  autodiff::VectorXdual dz(no_obs);
 
   for (int i = 0; i < sen_this_step.size(); i++) {
     if (NewLandmark(sen_this_step[i], lm_collection)) {
@@ -174,11 +176,11 @@ void CorrectionStep(const std::vector<SensorData> &sen_this_step,
 
     auto [idx_prm_x, idx_prm_y]{GetIdxPrmOfLandmark(sen_this_step[i], lm_collection)};
 
-    VectorXdual z(2);
+    autodiff::VectorXdual z(2);
     z << sen_this_step[i].range, sen_this_step[i].bearing;
 
     x = ResetDualVector(x);
-    VectorXdual z_exp{};
+    autodiff::VectorXdual z_exp{};
     H.middleRows(2 * i, 2) = jacobian(h, wrt(x), at(x, idx_prm_x, idx_prm_y), z_exp);
 
     dz.middleRows(2 * i, 2) = z - z_exp;
@@ -191,7 +193,7 @@ void CorrectionStep(const std::vector<SensorData> &sen_this_step,
   x = x + K * dz;
   x[2] = NormalizeAngle(x[2]);
 
-  Cx = (MatrixXd::Identity(no_prm, no_prm) - K * H) * Cx;
+  Cx = (Eigen::MatrixXd::Identity(no_prm, no_prm) - K * H) * Cx;
 }
 
 std::vector<SensorData> GetCurrentSensorData(const std::vector<SensorData> &sen_collection,
@@ -215,7 +217,7 @@ bool NewLandmark(const SensorData &sen, const std::vector<Landmark> &lm_collecti
 
 void AddFirstEstimateOfLandmarkTox(const SensorData &sen,
                                    std::vector<Landmark> &lm_collection,
-                                   VectorXdual &x) {
+                                   autodiff::VectorXdual &x) {
   double x_lm{x[0].val + sen.range * cos(sen.bearing + x[2].val)};
   double y_lm{x[1].val + sen.range * sin(sen.bearing + x[2].val)};
   x[lm_collection[sen.id - 1].idx_prm_x] = x_lm;
@@ -232,28 +234,30 @@ std::tuple<int, int> GetIdxPrmOfLandmark(const SensorData &sen,
   }
 }
 
-VectorXdual h(const VectorXdual &x, const int &idx_prm_x, const int &idx_prm_y) {
-  dual dx{x[idx_prm_x] - x[0]};
-  dual dy{x[idx_prm_y] - x[1]};
+autodiff::VectorXdual h(const autodiff::VectorXdual &x,
+                        const int &idx_prm_x,
+                        const int &idx_prm_y) {
+  autodiff::dual dx{x[idx_prm_x] - x[0]};
+  autodiff::dual dy{x[idx_prm_y] - x[1]};
 
-  VectorXdual fh(2);
+  autodiff::VectorXdual fh(2);
   fh[0] = sqrt(dx * dx + dy * dy);
   fh[1] = NormalizeAngle(atan2(dy, dx) - x[2]);
 
   return fh;
 }
 
-MatrixXd GetQ(const unsigned long &no_obs) {
+Eigen::MatrixXd GetQ(const unsigned long &no_obs) {
   const double kSensorNoise{0.01};
-  MatrixXd Q{MatrixXd::Identity(no_obs, no_obs) * kSensorNoise};
+  Eigen::MatrixXd Q{Eigen::MatrixXd::Identity(no_obs, no_obs) * kSensorNoise};
   return Q;
 }
 
-void ReportRobotPose(const VectorXdual &x, const int &time) {
+void ReportRobotPose(const autodiff::VectorXdual &x, const int &time) {
   std::cout << "Robot pose at time " << time << " = " << x.transpose() << std::endl;
 }
 
-dual NormalizeAngle(dual angle) {
+autodiff::dual NormalizeAngle(autodiff::dual angle) {
   while (angle > M_PI) {
     angle = angle - 2 * M_PI;
   }
@@ -263,7 +267,7 @@ dual NormalizeAngle(dual angle) {
   return angle;
 }
 
-VectorXdual ResetDualVector(VectorXdual x) {
+autodiff::VectorXdual ResetDualVector(autodiff::VectorXdual x) {
   for (int i = 0; i < x.size(); i++) {
     x[i].grad = 0;
   }
