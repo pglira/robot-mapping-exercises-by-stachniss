@@ -1,7 +1,7 @@
 #ifndef EKF_SLAM_MAIN_H
 #define EKF_SLAM_MAIN_H
 
-#include <math.h>
+#include <cmath>
 #include <Eigen/Dense>
 #include <autodiff/forward.hpp>
 #include <autodiff/forward/eigen.hpp>
