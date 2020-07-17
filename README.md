@@ -23,6 +23,10 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ![](sheet6-ex1_ukf-slam/julia/state.gif)
 
+## Own exercise "Canonical parametrization of gaussian distribution"
+
+![](information-form/julia/PDF.png)
+
 ## Related
 
 - Repositories containing solutions written in Octave:
