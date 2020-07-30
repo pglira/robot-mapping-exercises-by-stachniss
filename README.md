@@ -27,6 +27,10 @@ Lecture recordings are available on [YouTube](https://www.youtube.com/playlist?l
 
 ![](information-form/julia/PDF.png)
 
+## Exercise "Gridmapping" (sheet 7, exercise 1)
+
+![](sheet7-ex1_gridmapping/julia/grid.gif)
+
 ## Related
 
 - Repositories containing solutions written in Octave:
