@@ -55,6 +55,18 @@ function define_grid(data, grid_border, grid_cellsize)
     return grid_limits, grid_origin
 end
 
+function read_trajectory(data)
+
+    no_poses = length(data)
+    trj = Array{Float64}(undef, 3, no_poses)
+    for i = 1:no_poses
+        trj[1,i] = data[i]["pose"][1]
+        trj[2,i] = data[i]["pose"][2]
+        trj[3,i] = data[i]["pose"][3]
+    end
+
+    return trj
+end
 
 function prob_to_log_odds(p)
 # Convert proability values p to the corresponding log odds l
@@ -257,11 +269,12 @@ function inverse_sensor_model(grid, data, grid_cellsize, grid_origin, prob_prior
     return grid_update, pose_gridframe, X_laser_gridframe
 end
 
-function plot_grid(grid, pose, pts, img_dir, i)
+function plot_grid(grid, trj, pts, img_dir, i)
 
     cla() # otherwise very slow
     matshow(grid.*-1, fignum=0, cmap=ColorMap("gray"), origin="lower", vmin=-1, vmax=1)
-    plot(pose[1], pose[2], "og", markersize=2)
+    plot(trj[1,1:i], trj[2,1:i], "-g", linewidth=1) # trajectory
+    plot(trj[1,i], trj[2,i], "og", markersize=2) # current pose
     plot(pts[1,:], pts[2,:], ".r", markersize=0.1)
 
     if i == 1
@@ -303,6 +316,11 @@ function main()
     grid_limits, grid_origin = define_grid(data, opt["grid_border"], opt["grid_cellsize"])
     grid = initialize_grid(grid_limits, opt["grid_cellsize"], opt["prob_prior"])
 
+    # Read robot trajectory and transform to grid frame (only for plotting)
+    trj_worldframe = read_trajectory(data)
+    trj_mapframe = world_to_map(trj_worldframe, grid_origin)
+    trj_gridframe = map_to_grid(trj_mapframe, opt["grid_cellsize"])
+
     for i = 1:length(data)
 
         @info "Processing data chunk $i of $(length(data))"
@@ -313,7 +331,7 @@ function main()
 
         grid = grid + grid_update
 
-        plot_grid(grid, pose_gridframe, X_laser_gridframe, opt["img_dir"], i)
+        plot_grid(grid, trj_gridframe, X_laser_gridframe, opt["img_dir"], i)
 
     end
 
